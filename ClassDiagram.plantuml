@@ -1,0 +1,201 @@
+@startuml Logent
+skinparam classAttributeIconSize 0 
+skinparam linetype ortho
+title Logent
+package "Domeinlaag"{
+    class Persoon{
+        + string Naam
+        + DateTime Geboortedatum
+        + Image RecentePhoto
+        + VoegHuisdierToe(huisdier : Huisdier) : void
+        + VerwijderHuisdier(huisdier : Huisdier) : void
+        }
+
+    class Kind{
+        + string FavorieteSpeelgoed
+        + Kind(naam : string, geboortedatum : DateTime, recentePhoto : Image, ouders : List<Ouder>, favorieteSpeelgoed : string, List<Huisdier> huisdieren, woning : Woning)
+        + Kind(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, woning : Woning)
+        + VoegOuderToe(ouder : Ouder) : void
+        + VerwijderOuder(ouder : Ouder) : void
+    }
+    class Ouder{
+    + Ouder(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, List<Huisdier> huisdieren, woning : Woning)
+    + Ouder(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, woning : Woning)
+    + VerwijderKind(kind : Kind) : void
+    + VoegKindToe(kind : Kind) : void
+    }
+
+    Persoon <|-- Ouder
+    Persoon <|-- Kind
+    Ouder "\n1..*\n+Ouders" -- "1..* \n+kinderen" Kind
+
+
+    abstract Class Huisdier{
+    + DateTime Geboortedatum
+    + bool IsGevaccineerd
+    }
+    Huisdier "0..*\n+Huisdieren" ---- "\t1\neigenaar" Persoon
+
+    Class Kat{
+    + bool HoudtVanMelk
+    + KattenRas Ras
+    + Kat(geboortedatum : DateTime, isGevaccineerd : bool, ras : KattenRas, houdtVanMelk : bool, eigenaar : Persoon, woning : Woning)
+    
+    }
+
+    Class Hond{
+    + bool IsKindVriendelijk
+    + HondeGrote Grote
+    + Hond(geboortedatum : DateTime, isGevaccineerd : bool, isKindVriendelijk : bool, grote : HondeGrote, eigenaar : Persoon, woning : Woning)
+    }
+
+    Enum KattenRas{
+        Siamese
+        MaineCoon
+        Bengaalsekat
+        BritseKorthaar
+        NoorseBoskat
+        Ragdoll
+        Sphynx
+        Abessijn
+        ScottishFold
+        RussischBlauw
+        Perzischekat
+        HeiligeBirmaan
+        Savannahkat
+        TurkseVan
+        AmerikaanseKorthaar
+        
+    }
+
+    Enum HondeGrote{
+        Groot
+        Gemmiddeld
+        Klein
+    }
+    Huisdier <|-- Kat
+
+    Huisdier <|-- Hond
+
+    Interface IBewoner{
+
+    }
+
+    IBewoner <|.. Persoon
+    IBewoner <|.. Huisdier
+
+    class Woning{
+    + Woning(adres : Adres, bewoners List<IBewoner>)
+    + GeefbewonersOfType<Type>() : List<Type>
+    }
+
+    class Adres{
+        + string Straatnaam
+        + string Huisnummer
+        + Adres(stad : Stad, straatnaam : string, huisnummer : string )
+    }
+    class Stad{
+    + string Naam
+    + int PostCode
+    + Stad(naam : string, postCode : int, woningManager : WoningManager)
+    }
+
+    Class WoningManager{
+    + WoningManager(persistentieControler : IPersistentieControler)
+    + VoegWoningToe(woning : Woning) : void
+    + VerwijderWoning(woning : Woning) : void
+    + GeefbewonersOfType<Type>() : List<Type>
+    }
+
+    Adres "1\n+ Adres" ---x Woning
+    Woning "0..*\n- _woningen" --x WoningManager
+    WoningManager "1\n + WoningManager" --x Stad
+    IBewoner "0..*\n+ Bewoners"-- "1\n+ Woning" Woning
+    Adres x--"1\n + Stad" Stad
+
+
+    class PolitieAgent{
+    + PolitieAgent(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, List<Huisdier> huisdieren, woning : Woning)
+    + PolitieAgent(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, woning : Woning)
+
+    }
+
+    class BrandweerMan{
+    + BrandweerMan(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, List<Huisdier> huisdieren, woning : Woning)
+    + BrandweerMan(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, woning : Woning)
+    }
+
+    class Verpleger{
+    + Verpleger(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, List<Huisdier> huisdieren, woning : Woning)
+   + Verpleger(naam : string, geboortedatum : DateTime, recentePhoto : Image, Kinderen : List<Kind>, woning : Woning)
+    }
+
+    Ouder <|-- Verpleger
+    Ouder <|-- BrandweerMan
+    Ouder <|-- PolitieAgent
+    interface HelperbijCrisis{
+    + Help() :void
+    }
+
+    interface BeschermerbijCrisis{
+    + Help() :void
+    }
+
+    BeschermerbijCrisis <|..Verpleger
+    BeschermerbijCrisis <|..BrandweerMan
+    HelperbijCrisis <|..BrandweerMan
+    HelperbijCrisis <|..PolitieAgent
+    HelperbijCrisis <|..Hond  
+
+   
+    class AlarmCentrale{
+        + AlarmCentrale(woningManager : WoningManager)
+        + SlaAlarm():List<string>
+    }
+    Stad "1*\n+ Stad" -- "1\n + AlarmCentrale" AlarmCentrale
+    Class DomeinControler{
+        + DomeinControler(stad Stad)
+        + SelekteerWoningVanHuidigeStad(IDBinnenStad : int) : void
+        + GeefInfoWoningenByIDBinnenStad():List<string>
+        + SelekteerBewonerVanHuidigeWoning(IDBinnenWoning :int) : void
+        + GeefInfoBewonersVolgensIDVanHuidigeWoning():List<string>
+        + GeefSpeelgoedVoorKerstMan(): List<string>
+        + GeefInfoBeschermers(): List<string>
+        + GeefInfoHelpers(): List<string>
+        + SlaAlarm():List<string>
+        + GeefInfoOudersVanKind(): List<string>
+        + GeefInfoKinderenVanOuders() : List<string>
+        + ZoekAdresHuisVanPersoon(recenteFoto : Image) : string
+    }
+
+    Stad "1\n - _huidigeStad" --x DomeinControler
+
+    interface IPersistentieControler{
+        + GeefWoningenVanStad() :List<Woning>
+    }
+    IPersistentieControler "1\n persistentieControler" --x WoningManager
+}
+
+
+
+Package "PersistentieLaag"{
+Class PersistentieControler{
+ + PersistentieControler(dataPath:string)
+}
+
+Class WoningRepository{
++ DataPathSteden : string
+ + DatapathOfStadWoningen : Dictionary<String,string>
+ + WoningRepository(sataPathSteden : string )
+ + GeefWoningenVanStad() :List<Woning>
+}
+ WoningRepository "1\n - _repo" --x PersistentieControler
+  IPersistentieControler  <|-- PersistentieControler
+}
+
+Package "utilities"{
+class LogentProgramFactory{
+    + CreateSystem():DomeinControler
+}
+}
+@enduml
